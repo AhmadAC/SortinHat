@@ -19,12 +19,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up a Python 3.11 environment
+      # Step 2: Set up a Python 3.11 environment (with caching disabled)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+          architecture: 'x64' # Explicitly set architecture
+          # Caching is disabled to prevent reusing a bad state.
+          # cache: 'pip' # <-- THIS LINE IS INTENTIONALLY REMOVED/COMMENTED OUT
 
       # Step 3: Install all Python dependencies from the pinned requirements file
       - name: Install Python dependencies
