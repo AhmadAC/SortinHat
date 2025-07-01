@@ -31,9 +31,6 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          echo "Clearing pip cache to ensure a clean install..."
-          python -m pip cache purge
-          echo "Installing pinned dependencies from requirements.txt..."
           pip install -r requirements.txt
 
       # Step 4: Compile the application into a single .exe using Nuitka
@@ -43,7 +40,7 @@ jobs:
           python -m nuitka `
             --onefile `
             --windows-disable-console `
-            --enable-plugin=pyside6 `
+            --enable-plugin=qt-binding `
             --enable-plugin=pyttsx3 `
             --enable-plugin=numpy `
             --output-dir=dist `

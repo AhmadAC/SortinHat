@@ -3,8 +3,8 @@
 # GUI Framework
 PySide6==6.9.1
 
-# Nuitka and its dependencies for compilation
-nuitka==2.7.11
+# Nuitka (version 2.8.0 or newer is required for the pyttsx3 plugin)
+nuitka==2.8.5
 zstandard==0.23.0
 ordered-set==4.1.0
 
