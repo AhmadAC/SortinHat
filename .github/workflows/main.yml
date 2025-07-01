@@ -51,8 +51,6 @@ jobs:
             --add-data "hat_think.gif;." `
             --add-data "settings.json;." `
             --add-data "sortinghat_music.mp3;." `
-            --add-data "volume_on.png;." `
-            --add-data "volume_off.png;." `
             sorting_hat_app.py
         shell: pwsh
 
