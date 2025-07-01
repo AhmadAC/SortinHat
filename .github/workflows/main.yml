@@ -25,15 +25,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- Step 2: Set up Python environment ---
+      # --- Step 2: Set up a clean Python environment ---
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: requirements.txt
+          # THE CACHE IS INTENTIONALLY DISABLED to prevent a corrupted state.
+          # This guarantees a clean, reproducible build every time.
 
-      # --- Step 3: Install Python dependencies ---
+      # --- Step 3: Install pinned Python dependencies ---
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -41,7 +41,6 @@ jobs:
         shell: pwsh
 
       # --- Step 4: Generate the base .spec file ---
-      # This step creates the build recipe. We add all assets here.
       - name: Generate PyInstaller Spec File
         run: |
           pyi-makespec --onefile --windowed --name SortingHatApp `
@@ -55,8 +54,6 @@ jobs:
         shell: pwsh
 
       # --- Step 5: Modify .spec to Exclude pwdeep.py ---
-      # This is the key step for your special requirement. We programmatically
-      # add the 'excludes' directive to the generated .spec file.
       - name: Modify Spec File to Exclude Module
         run: |
           (Get-Content -Path SortingHatApp.spec) -replace "a = Analysis\(\['sorting_hat_app.py'\]", "a = Analysis(['sorting_hat_app.py'], excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
@@ -68,8 +65,6 @@ jobs:
         shell: pwsh
 
       # --- Step 7: Prepare and Upload the Release Artifact ---
-      # We create a 'release' folder, copy the final .exe AND pwdeep.py into it,
-      # and then upload that folder as a zip.
       - name: Prepare and Upload Release Artifact
         shell: pwsh
         run: |
