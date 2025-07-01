@@ -1,0 +1,225 @@
+{
+    "hat_characteristics": {
+        "emotions_to_display": [
+            "wise",
+            "mean",
+            "playful",
+            "perceptive",
+            "ancient",
+            "fair",
+            "decisive",
+            "occasionally humorous"
+        ],
+        "speech_style_keywords": [
+            "eloquent",
+            "slightly archaic",
+            "insightful",
+            "clear"
+        ]
+    },
+    "interaction_rules": {
+        "ask_leading_question": "True",
+        "preamble_length_before_sorting": "medium",
+        "sorting_must_occur_in_this_response": "True",
+        "minimum_questions_before_sorting": 3
+    },
+    "response_formatting": {
+        "target_word_count": 50,
+        "target_speech_duration_seconds": 0,
+        "target_word_count_question": 30
+    },
+    "api_parameters": {
+        "deepseek_temperature": 0.75,
+        "max_tokens_override": 0
+    },
+    "tts_settings": {
+        "available_voices": [
+            {
+                "index": 0,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_DAVID_11.0",
+                "name": "Microsoft David Desktop - English (United States)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 1,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enCA_RichardM",
+                "name": "Microsoft Richard - English (Canada)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 2,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enIE_SeanM",
+                "name": "Microsoft Sean - English (Ireland)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 3,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enIN_HeeraM",
+                "name": "Microsoft Heera - English (India)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 4,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enIN_RaviM",
+                "name": "Microsoft Ravi - English (India)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 5,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enUS_DavidM",
+                "name": "Microsoft David - English (United States)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 6,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enUS_MarkM",
+                "name": "Microsoft Mark - English (United States)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 7,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enUS_ZiraM",
+                "name": "Microsoft Zira - English (United States)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 8,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_jaJP_AyumiM",
+                "name": "Microsoft Ayumi - Japanese (Japan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 9,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_jaJP_HarukaM",
+                "name": "Microsoft Haruka - Japanese (Japan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 10,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_jaJP_IchiroM",
+                "name": "Microsoft Ichiro - Japanese (Japan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 11,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_jaJP_SayakaM",
+                "name": "Microsoft Sayaka - Japanese (Japan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 12,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhCN_HuihuiM",
+                "name": "Microsoft Huihui - Chinese (Simplified, PRC)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 13,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhCN_YaoyaoM",
+                "name": "Microsoft Yaoyao - Chinese (Simplified, PRC)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 14,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhHK_DannyM",
+                "name": "Microsoft Danny - Chinese (Traditional, Hong Kong S.A.R.)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 15,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhHK_TracyM",
+                "name": "Microsoft Tracy - Chinese (Traditional, Hong Kong S.A.R.)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 16,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhTW_HanhanM",
+                "name": "Microsoft Hanhan - Chinese (Traditional, Taiwan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 17,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhTW_YatingM",
+                "name": "Microsoft Yating - Chinese (Traditional, Taiwan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 18,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_zhTW_ZhiweiM",
+                "name": "Microsoft Zhiwei - Chinese (Traditional, Taiwan)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 19,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\MSTTS_V110_enCA_LindaM",
+                "name": "Microsoft Linda - English (Canada)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 20,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_ZIRA_11.0",
+                "name": "Microsoft Zira Desktop - English (United States)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 21,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_JA-JP_HARUKA_11.0",
+                "name": "Microsoft Haruka Desktop - Japanese",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 22,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_ZH-CN_HUIHUI_11.0",
+                "name": "Microsoft Huihui Desktop - Chinese (Simplified)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 23,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_ZH-HK_TRACY_11.0",
+                "name": "Microsoft Tracy Desktop - Chinese(Traditional, HongKong SAR)",
+                "lang": [],
+                "gender": null
+            },
+            {
+                "index": 24,
+                "id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_ZH-TW_HANHAN_11.0",
+                "name": "Microsoft Hanhan Desktop - Chinese (Taiwan)",
+                "lang": [],
+                "gender": null
+            }
+        ],
+        "selected_voice_index": 6,
+        "tts_rate": 200
+    },
+    "academy_name": "Magical Sorting Hat",
+    "house_system_name": "Scientist",
+    "custom_houses": [
+        "Tesla",
+        "Darwin",
+        "Pythagoras",
+        "Einstein"
+    ],
+    "stt_input_language_mode": 3
+}
