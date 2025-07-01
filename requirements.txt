@@ -8,7 +8,7 @@ ordered-set
 
 # Application Dependencies
 pyttsx3
-pyaudio # Often a better dependency for sounddevice on Windows
+pywin32 # Explicitly add the modern windows dependency, avoids issues with pyttsx3's old pypiwin32
 sounddevice
 scipy
 numpy
