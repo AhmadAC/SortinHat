@@ -30,8 +30,6 @@ jobs:
       - name: Set up Python 3.13.5
         uses: actions/setup-python@v5
         with:
-          # Updated to Python 3.13.5.
-          # The build will only succeed if this version is available in the GitHub Actions runner environment.
           python-version: '3.13.5'
           # THE CACHE IS INTENTIONALLY DISABLED to prevent a corrupted state.
           # This guarantees a clean, reproducible build every time.
@@ -57,6 +55,8 @@ jobs:
       # --- Step 5: Modify .spec to Exclude pwdeep.py ---
       - name: Modify Spec File to Exclude Module
         run: |
+          # This step is crucial. It tells PyInstaller NOT to bundle pwdeep.py,
+          # forcing the final .exe to look for it as a separate file at runtime.
           (Get-Content -Path SortingHatApp.spec) -replace "a = Analysis\(\['sorting_hat_app.py'\]", "a = Analysis(['sorting_hat_app.py'], excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
         shell: pwsh
 
@@ -70,8 +70,9 @@ jobs:
         shell: pwsh
         run: |
           mkdir release
+          # Copy only the built executable to the release folder.
+          # The user will manually place pwdeep.py next to the .exe after downloading.
           copy dist\SortingHatApp.exe release\
-          copy pwdeep.py release\
           
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
