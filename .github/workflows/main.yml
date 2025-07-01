@@ -26,11 +26,14 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # Step 3: Install all Python dependencies from the updated requirements file
+      # Step 3: Install all Python dependencies from the pinned requirements file
       - name: Install Python dependencies
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
+          echo "Clearing pip cache to ensure a clean install..."
+          python -m pip cache purge
+          echo "Installing pinned dependencies from requirements.txt..."
           pip install -r requirements.txt
 
       # Step 4: Compile the application into a single .exe using Nuitka

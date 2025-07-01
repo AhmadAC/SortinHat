@@ -1,16 +1,18 @@
+# This file pins exact versions for a reproducible build on Python 3.11.
+
 # GUI Framework
-PySide6
+PySide6==6.9.1
 
 # Nuitka and its dependencies for compilation
-nuitka
-zstandard
-ordered-set
+nuitka==2.7.11
+zstandard==0.23.0
+ordered-set==4.1.0
 
 # Application Dependencies
-pyttsx3
-pywin32 # Explicitly add the modern windows dependency, avoids issues with pyttsx3's old pypiwin32
-sounddevice
-scipy
-numpy
-SpeechRecognition
-requests
+pyttsx3==2.98
+pywin32==310
+sounddevice==0.5.2
+scipy==1.16.0
+numpy==2.3.1
+SpeechRecognition==3.14.3
+requests==2.32.4
