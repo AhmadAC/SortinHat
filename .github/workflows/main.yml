@@ -1,0 +1,79 @@
+# GitHub Actions Workflow to build the AI Sorting Hat for Windows
+# This workflow compiles the Python application into a single .exe file.
+
+name: Build Sorting Hat Windows EXE
+
+# --- Triggers ---
+# This workflow runs on:
+# 1. A push to the 'main' branch.
+# 2. Manual trigger from the GitHub Actions UI ('workflow_dispatch').
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    # The type of runner that the job will run on. We need Windows for a .exe.
+    runs-on: windows-latest
+
+    steps:
+      # --- Step 1: Checkout Repository ---
+      # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Step 2: Set up Python ---
+      # Sets up a Python 3.11 environment for the build.
+      # Caching pip dependencies speeds up subsequent builds.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # --- Step 3: Install Dependencies ---
+      # Installs all required Python packages from your requirements.txt file.
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # --- Step 4: Compile with Nuitka ---
+      # This is the core step that builds the one-file executable.
+      # Each flag is critical for success.
+      - name: Compile Application with Nuitka
+        run: |
+          python -m nuitka `
+            --onefile `
+            --windows-disable-console `
+            --enable-plugin=pyside6 `
+            --enable-plugin=pyttsx3 `
+            --enable-plugin=numpy `
+            --output-dir=dist `
+            --no-follow-import-to=pwdeep `
+            --include-data-file="hat.gif=hat.gif" `
+            --include-data-file="hat_think.gif=hat_think.gif" `
+            --include-data-file="settings.json=settings.json" `
+            --include-data-file="sortinghat_music.mp3=sortinghat_music.mp3" `
+            --include-data-file="volume_on.png=volume_on.png" `
+            --include-data-file="volume_off.png=volume_off.png" `
+            sorting_hat_app.py
+
+      # --- Step 5: Prepare Artifacts ---
+      # Nuitka creates the .exe in the 'dist' folder. We copy it to a new 'release'
+      # folder and also copy the required pwdeep.py file alongside it.
+      - name: Prepare Release Artifact
+        run: |
+          mkdir release
+          copy dist\sorting_hat_app.exe release\
+          copy pwdeep.py release\
+          
+      # --- Step 6: Upload Artifact ---
+      # Uploads the 'release' folder (containing the .exe and pwdeep.py) as a
+      # build artifact, which you can download from the workflow run's summary page.
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sorting-Hat-Windows
+          path: release/

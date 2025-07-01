@@ -1,0 +1,16 @@
+# GUI Framework
+PySide6
+
+# Nuitka and its dependencies for compilation
+nuitka
+zstandard
+ordered-set
+
+# Application Dependencies
+pyttsx3
+pyaudio # Often a better dependency for sounddevice on Windows
+sounddevice
+scipy
+numpy
+SpeechRecognition
+requests
