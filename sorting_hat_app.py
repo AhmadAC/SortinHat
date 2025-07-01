@@ -2,7 +2,7 @@
 import sys
 import os
 import time 
-import random # <-- ADD THIS LINE
+import random
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
@@ -18,8 +18,6 @@ from workers import AudioRecorderWorker, SpeechToTextWorker, DeepSeekWorker, Tex
 from animation_handler import AnimationHandler
 from media_players import BackgroundMusicPlayer 
 
-VOLUME_ON_ICON_PATH = "volume_on.png" 
-VOLUME_OFF_ICON_PATH = "volume_off.png"
 
 # Define a constant for the state after sorting is done
 FINAL_SORTING_STEP_COMPLETE = 99 # Arbitrary number greater than max questions
@@ -61,11 +59,9 @@ class SortingHatApp(QMainWindow):
         self.current_oracle_state = "idle" 
         self.interaction_step = 0 
         
-        # New variable to hold the random number of questions for the current session
         self.questions_to_ask_this_session = 0
         print(f"INFO: SortingHatApp initialized.")
 
-        # ... (rest of __init__ is unchanged) ...
         initial_bg_volume_slider_value = 15
         normalized_initial_slider_value = initial_bg_volume_slider_value / 100.0
         power_exponent = 2.5 
@@ -84,9 +80,7 @@ class SortingHatApp(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setFocus() 
 
-    # ... (_init_ui_elements, _update_status_bar, _stop_all_active_workers are unchanged) ...
     def _init_ui_elements(self):
-        # ... (UI initialization remains the same)
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         main_layout = QVBoxLayout(self.central_widget)
@@ -111,12 +105,13 @@ class SortingHatApp(QMainWindow):
         self.mute_button.setToolTip("Mute/Unmute Background Music")
         self.mute_button.setIconSize(QSize(24, 24)) 
         self.mute_button.clicked.connect(self._toggle_music_mute)
-        self.volume_on_icon = QIcon(VOLUME_ON_ICON_PATH)
-        self.volume_off_icon = QIcon(VOLUME_OFF_ICON_PATH)
-        if self.volume_on_icon.isNull() or self.volume_off_icon.isNull():
-            print("WARNING: Volume icons not found. Using text.")
-            self.mute_button.setText("Mute"); self.mute_button.setFixedSize(60, 28)
-        else: self.mute_button.setFixedSize(30,30)
+
+        # --- FIX 1: Removed icon logic, forcing text-based button ---
+        print("INFO: Mute button is using text labels (icons removed).")
+        self.mute_button.setText("Mute")
+        self.mute_button.setFixedSize(60, 28)
+        # --- End of FIX 1 ---
+
         self.volume_slider = QSlider(Qt.Horizontal)
         self.volume_slider.setToolTip("Adjust Background Music Volume")
         self.volume_slider.setRange(0, 100); self.volume_slider.setFixedWidth(100) 
@@ -167,11 +162,10 @@ class SortingHatApp(QMainWindow):
         
         self._stop_all_active_workers() 
 
-        # New: Set a random number of questions for the new session
         self.questions_to_ask_this_session = random.randint(3, 5)
         print(f"DEBUG: New session started. The hat will ask {self.questions_to_ask_this_session} questions before sorting.")
 
-        self.interaction_step = 0 # Reset to initial state for a new interaction
+        self.interaction_step = 0
         self.current_oracle_state = "idle" 
         
         self.activate_hat_button.setEnabled(True)
@@ -212,8 +206,8 @@ class SortingHatApp(QMainWindow):
             self.activate_hat_button.setEnabled(True) 
             self.record_button.setEnabled(True)
             self.stop_button.setEnabled(False)
-        elif self.interaction_step > 0 and self.interaction_step < FINAL_SORTING_STEP_COMPLETE: # In conversation
-             self._update_status_bar(f"Oracle awaits your answer to question {self.interaction_step}...") # Or similar
+        elif self.interaction_step > 0 and self.interaction_step < FINAL_SORTING_STEP_COMPLETE:
+             self._update_status_bar(f"Oracle awaits your answer to question {self.interaction_step}...")
 
         self.setFocus() 
         print(f"UI_LOG: Anim cycle done. App Interaction Step: {self.interaction_step}. ActBtn: {self.activate_hat_button.isEnabled()}, RecBtn: {self.record_button.isEnabled()}, StopBtn: {self.stop_button.isEnabled()}")
@@ -228,7 +222,7 @@ class SortingHatApp(QMainWindow):
             self.animation_handler.set_thinking_animation(loop=True) 
         self.current_oracle_state = "thinking"
 
-    def activate_oracle_interaction(self): # Hat initiates conversation
+    def activate_oracle_interaction(self):
         if self._is_shutting_down: return
         print("DEBUG: activate_oracle_interaction clicked (Hat initiates).")
         
@@ -240,7 +234,6 @@ class SortingHatApp(QMainWindow):
         
         selected_primary_char = self.primary_characteristic_combo.currentData() or "friendly"
 
-        # New: Pass the random number of questions to the worker
         self.deepseek_worker = DeepSeekWorker(user_text=None, 
                                               conversation_step=self.interaction_step, 
                                               questions_for_this_round=self.questions_to_ask_this_session,
@@ -251,8 +244,7 @@ class SortingHatApp(QMainWindow):
         self.deepseek_worker.error_signal.connect(self._on_deepseek_error)
         self.deepseek_worker.start()
 
-    # ... (start_recording_router and _start_audio_recording_common are unchanged) ...
-    def start_recording_router(self): # User initiates or continues conversation
+    def start_recording_router(self):
         if self._is_shutting_down: return
         print(f"DEBUG: start_recording_router clicked. Current App Interaction Step: {self.interaction_step}")
 
@@ -351,7 +343,6 @@ class SortingHatApp(QMainWindow):
         current_deepseek_step = self.interaction_step
         
         print(f"DEBUG: Calling DeepSeekWorker with its conversation_step: {current_deepseek_step}")
-        # New: Pass the random number of questions to the worker
         self.deepseek_worker = DeepSeekWorker(user_text=transcribed_text, 
                                               conversation_step=current_deepseek_step, 
                                               questions_for_this_round=self.questions_to_ask_this_session,
@@ -368,14 +359,11 @@ class SortingHatApp(QMainWindow):
         self.oracle_response_text.setPlainText(oracle_response_text)
         self.current_oracle_state = "speaking" 
 
-        # New: Check against the random number of questions for this session
         if self.interaction_step < self.questions_to_ask_this_session:
-            # Hat asked a question, advance app's interaction_step for next user input
             self.interaction_step += 1 
             self._update_status_bar(f"Oracle asks question {self.interaction_step}. Preparing to speak...")
             print(f"DEBUG: Hat asked Q{self.interaction_step}. App Interaction Step advanced to: {self.interaction_step}")
-        else: # self.interaction_step == self.questions_to_ask_this_session
-            # Hat has sorted. Mark as final.
+        else:
             self.interaction_step = FINAL_SORTING_STEP_COMPLETE 
             self._update_status_bar("Oracle has made its decision. Preparing to speak...")
             print(f"DEBUG: Hat has sorted. App Interaction Step set to: {self.interaction_step}")
@@ -389,7 +377,6 @@ class SortingHatApp(QMainWindow):
         self.tts_worker.error_signal.connect(self._on_tts_error)
         self.tts_worker.start()
 
-    # ... (rest of the file from on_tts_playback_finished to the end is unchanged) ...
     def on_tts_playback_finished(self): 
         if self._is_shutting_down: return
         print(f"DEBUG: on_tts_playback_finished. App Interaction Step: {self.interaction_step}")
@@ -403,14 +390,13 @@ class SortingHatApp(QMainWindow):
             print("DEBUG: TTS finished after final response/sorting. Triggering full reset.")
             self._just_sorted_flag = True 
             self._reset_interaction_flow_and_ui("Sorting complete. Waiting for the next student...")
-        else: # Hat asked a question, waiting for user's next response
+        else:
             print(f"DEBUG: TTS finished after Hat asked Q{self.interaction_step}. Waiting for user answer.")
             self._update_status_bar(f"Please answer the Oracle's question (Q{self.interaction_step}).")
             if self.animation_handler:
                  self.animation_handler.set_thinking_animation(loop=True)
-            else: # Fallback if no animation handler
+            else:
                 self.on_animation_cycle_completed() 
-            # Enable recording for the next answer
             self.record_button.setEnabled(True)
             self.stop_button.setEnabled(False)
             self.activate_hat_button.setEnabled(True)
@@ -446,12 +432,14 @@ class SortingHatApp(QMainWindow):
     def _toggle_music_mute(self): 
         if self._is_shutting_down: return
         if self.music_player: self.music_player.toggle_mute()
+        
     @Slot(bool)
     def _update_mute_button_icon(self, muted: bool): 
         if self._is_shutting_down: return
-        if not self.volume_on_icon.isNull() and not self.volume_off_icon.isNull():
-            self.mute_button.setIcon(self.volume_off_icon if muted else self.volume_on_icon); self.mute_button.setText("")
-        else: self.mute_button.setText("Unmute" if muted else "Mute"); self.mute_button.setIcon(QIcon())
+        # --- FIX 2: Removed icon logic, forcing text-based update ---
+        self.mute_button.setText("Unmute" if muted else "Mute")
+        self.mute_button.setIcon(QIcon()) # Clear any potential stale icon
+        # --- End of FIX 2 ---
         
     @Slot(int)
     def _change_music_volume(self, value: int): 
