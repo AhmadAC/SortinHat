@@ -1,18 +1,14 @@
-# This file pins exact versions for a reproducible build on Python 3.11.
-
 # GUI Framework
-PySide6==6.9.1
+PySide6
 
-# Nuitka (version 2.8.0 or newer is required for the pyttsx3 plugin)
-nuitka==2.8.5
-zstandard==0.23.0
-ordered-set==4.1.0
+# EXE Bundler
+pyinstaller
 
 # Application Dependencies
-pyttsx3==2.98
-pywin32==310
-sounddevice==0.5.2
-scipy==1.16.0
-numpy==2.3.1
-SpeechRecognition==3.14.3
-requests==2.32.4
+pyttsx3
+pywin32
+sounddevice
+scipy
+numpy
+SpeechRecognition
+requests
