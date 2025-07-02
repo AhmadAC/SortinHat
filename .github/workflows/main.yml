@@ -41,7 +41,7 @@ jobs:
           pip install -r requirements.txt
         shell: pwsh
 
-      # --- Step 4: Generate the base .spec file (using --onedir) ---
+      # --- Step 4: Generate the base .spec file (with hidden import fix) ---
       - name: Generate PyInstaller Spec File
         run: |
           pyi-makespec --onedir --windowed --name SortingHatApp `
@@ -49,6 +49,7 @@ jobs:
             --add-data "hat_think.gif;." `
             --add-data "settings.json;." `
             --add-data "sortinghat_music.mp3;." `
+            --hidden-import=scipy._cyutility `
             sorting_hat_app.py
         shell: pwsh
 
@@ -57,7 +58,6 @@ jobs:
         run: |
           # This step is crucial. It tells PyInstaller NOT to bundle pwdeep.py.
           # We replace the default empty excludes list with our target module.
-          # This works much more reliably with --onedir.
           (Get-Content -Path SortingHatApp.spec) -replace 'excludes=\[\]', "excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
         shell: pwsh
 
