@@ -55,9 +55,11 @@ jobs:
       # --- Step 5: Modify .spec to Exclude pwdeep.py ---
       - name: Modify Spec File to Exclude Module
         run: |
-          # This step is crucial. It tells PyInstaller NOT to bundle pwdeep.py,
-          # forcing the final .exe to look for it as a separate file at runtime.
-          (Get-Content -Path SortingHatApp.spec) -replace "a = Analysis\(\['sorting_hat_app.py'\]", "a = Analysis(['sorting_hat_app.py'], excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
+          # This step is crucial. It tells PyInstaller NOT to bundle pwdeep.py.
+          # The Analysis call in the .spec file already contains 'excludes=[]'.
+          # We simply replace that with our desired module to exclude. This is more robust
+          # than trying to inject a new argument into the Analysis() call.
+          (Get-Content -Path SortingHatApp.spec) -replace 'excludes=\[\]', "excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
         shell: pwsh
 
       # --- Step 6: Build the executable from the modified .spec file ---
