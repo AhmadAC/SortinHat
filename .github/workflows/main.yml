@@ -41,10 +41,10 @@ jobs:
           pip install -r requirements.txt
         shell: pwsh
 
-      # --- Step 4: Generate the base .spec file ---
+      # --- Step 4: Generate the base .spec file (using --onedir) ---
       - name: Generate PyInstaller Spec File
         run: |
-          pyi-makespec --onefile --windowed --name SortingHatApp `
+          pyi-makespec --onedir --windowed --name SortingHatApp `
             --add-data "hat.gif;." `
             --add-data "hat_think.gif;." `
             --add-data "settings.json;." `
@@ -56,9 +56,8 @@ jobs:
       - name: Modify Spec File to Exclude Module
         run: |
           # This step is crucial. It tells PyInstaller NOT to bundle pwdeep.py.
-          # The Analysis call in the .spec file already contains 'excludes=[]'.
-          # We simply replace that with our desired module to exclude. This is more robust
-          # than trying to inject a new argument into the Analysis() call.
+          # We replace the default empty excludes list with our target module.
+          # This works much more reliably with --onedir.
           (Get-Content -Path SortingHatApp.spec) -replace 'excludes=\[\]', "excludes=['pwdeep']" | Set-Content -Path SortingHatApp.spec
         shell: pwsh
 
@@ -71,13 +70,13 @@ jobs:
       - name: Prepare Release Artifact
         shell: pwsh
         run: |
+          # We are now packaging the entire output directory from dist/.
+          # This folder contains the .exe and all its dependencies.
           mkdir release
-          # Copy only the built executable to the release folder.
-          # The user will manually place pwdeep.py next to the .exe after downloading.
-          copy dist\SortingHatApp.exe release\
+          Copy-Item -Path dist/SortingHatApp -Destination release/ -Recurse
           
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SortingHat-Windows-Release
-          path: release/
+          path: release/SortingHatApp/
