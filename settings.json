@@ -21,7 +21,8 @@
         "ask_leading_question": "True",
         "preamble_length_before_sorting": "medium",
         "sorting_must_occur_in_this_response": "True",
-        "minimum_questions_before_sorting": 3
+        "minimum_questions_before_sorting": 3,
+        "maximum_questions_before_sorting": 1
     },
     "response_formatting": {
         "target_word_count": 50,
@@ -221,5 +222,6 @@
         "Pythagoras",
         "Einstein"
     ],
-    "stt_input_language_mode": 3
+    "stt_input_language_mode": 3,
+    "max_students_in_class": 8
 }
