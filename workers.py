@@ -304,7 +304,35 @@ class DeepSeekWorker(QThread):
                 prompt_parts.append(f"The student answered your last question. Now, ask your Question {question_number}. It should be a new, simple question to learn more about them. For example: 'What makes you feel brave?' or 'What is your favorite subject in school?'. Do NOT sort the student yet.")
         
         elif self.conversation_step == self.questions_for_this_round: # Time to sort
-            prompt_parts.append(f"You have asked all your questions. This is your final answer. Based on what the student said, you MUST choose one of these {house_system_name} for them: {houses_string}. Tell them the house and give a short, simple reason why you chose it. You MUST sort them now.")
+            # --- NEW GROUP BALANCING LOGIC START ---
+            max_students = self.get_setting("max_students_in_class", 20)
+            num_houses = len(custom_houses_list) if custom_houses_list and isinstance(custom_houses_list, list) and len(custom_houses_list) > 0 else 4
+            group_balance_info = ""
+            if num_houses > 0:
+                try:
+                    max_students = int(max_students)
+                    base_size = max_students // num_houses
+                    remainder = max_students % num_houses
+                    group_sizes = {}
+                    for i in range(num_houses):
+                        size = base_size + 1 if i < remainder else base_size
+                        if size in group_sizes:
+                            group_sizes[size] += 1
+                        else:
+                            group_sizes[size] = 1
+                    size_descriptions = []
+                    for size, count in sorted(group_sizes.items(), reverse=True):
+                        group_str = "group" if count == 1 else "groups"
+                        student_str = "student" if size == 1 else "students"
+                        size_descriptions.append(f"{count} {group_str} with {size} {student_str}")
+                    group_balance_info = (f"The maximum class size is {max_students}. To keep the houses balanced, "
+                                          f"they should be organized as evenly as possible: {', and '.join(size_descriptions)}. "
+                                          "Keep this principle of balance in mind when you are sorting.")
+                except (ValueError, TypeError):
+                    group_balance_info = "Your goal is to keep the houses balanced."
+                    print(f"WARNING: max_students_in_class ('{max_students}') is not a valid number. Using default balance prompt.")
+            # --- NEW GROUP BALANCING LOGIC END ---
+            prompt_parts.append(f"You have asked all your questions. This is your final answer. Based on what the student said, you MUST choose one of these {house_system_name} for them: {houses_string}. {group_balance_info} Tell them the house and give a short, simple reason why you chose it. You MUST sort them now.")
         
         else: # Should not happen if app logic is correct
              prompt_parts.append(f"Something is wrong. Just sort the student into one of the {house_system_name}: {houses_string}. Give a simple reason.")

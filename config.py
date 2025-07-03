@@ -19,6 +19,7 @@ DEFAULT_SETTINGS_TEMPLATE = {
     "academy_name": "BIBS Magical Sorting Hat", 
     "house_system_name": "Scientist", 
     "custom_houses": ["Tesla", "Darwin", "Pythagoras", "Einstein"],
+    "max_students_in_class": 20,
     "hat_characteristics": {
         # Simplified for Grade 6 ELL students
         "emotions_to_display": ["kind", "curious", "a little bit funny", "smart", "caring", "a good listener"],
