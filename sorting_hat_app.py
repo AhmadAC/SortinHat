@@ -162,7 +162,26 @@ class SortingHatApp(QMainWindow):
         
         self._stop_all_active_workers() 
 
-        self.questions_to_ask_this_session = random.randint(3, 5)
+        # --- UPDATED LOGIC TO READ QUESTION RANGE FROM SETTINGS ---
+        min_questions_setting = self.settings_manager.get_setting("interaction_rules.minimum_questions_before_sorting", 3)
+        max_questions_setting = self.settings_manager.get_setting("interaction_rules.maximum_questions_before_sorting", 5)
+        
+        try:
+            min_q = int(min_questions_setting)
+            max_q = int(max_questions_setting)
+            if min_q <= 0 or max_q <= 0: # Ensure positive numbers
+                min_q, max_q = 3, 5
+                print(f"WARNING: Min/max questions must be positive. Using default range 3-5.")
+            if min_q > max_q:
+                max_q = min_q # Prevent random.randint error if min > max
+                print(f"WARNING: Minimum questions ({min_q}) is greater than maximum ({max_q}). Using range {min_q}-{max_q}.")
+        except (ValueError, TypeError):
+            min_q, max_q = 3, 5
+            print(f"WARNING: Could not parse min/max questions from settings. Using default range {min_q}-{max_q}.")
+            
+        self.questions_to_ask_this_session = random.randint(min_q, max_q)
+        # --- END OF UPDATED LOGIC ---
+
         print(f"DEBUG: New session started. The hat will ask {self.questions_to_ask_this_session} questions before sorting.")
 
         self.interaction_step = 0

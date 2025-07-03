@@ -30,7 +30,8 @@ DEFAULT_SETTINGS_TEMPLATE = {
         "ask_leading_question": True,
         "preamble_length_before_sorting": "medium", 
         "sorting_must_occur_in_this_response": True,
-        "minimum_questions_before_sorting": 3 # This is now a fallback, the app uses a random 3-5.
+        "minimum_questions_before_sorting": 1,
+        "maximum_questions_before_sorting": 1
     },
     
     "response_formatting": {
