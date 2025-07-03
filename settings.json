@@ -21,7 +21,7 @@
         "ask_leading_question": "True",
         "preamble_length_before_sorting": "medium",
         "sorting_must_occur_in_this_response": "True",
-        "minimum_questions_before_sorting": 3,
+        "minimum_questions_before_sorting": 1,
         "maximum_questions_before_sorting": 1
     },
     "response_formatting": {
