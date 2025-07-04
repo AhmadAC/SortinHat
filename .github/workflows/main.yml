@@ -1,6 +1,6 @@
 # This workflow builds a Windows executable for the Sorting Hat app using Python 3.13.
 name: Build Sorting Hat Executable
-#
+
 on:
   push:
     branches: [ up1 ]
