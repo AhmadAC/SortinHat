@@ -3,7 +3,7 @@ import sys
 import os
 import time 
 import random
-import datetime  # Added for logging timestamp
+import datetime
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
@@ -18,6 +18,21 @@ from settings_manager import SettingsManager
 from workers import AudioRecorderWorker, SpeechToTextWorker, DeepSeekWorker, TextToSpeechWorker
 from animation_handler import AnimationHandler
 from media_players import BackgroundMusicPlayer 
+
+
+# --- SOLUTION: Define the correct base path for bundled vs. script mode ---
+def get_base_path():
+    """ Get the base path for the application, handling bundled executables. """
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, the base path is the executable's directory
+        return os.path.dirname(sys.executable)
+    else:
+        # If run as a normal .py script, the base path is the script's directory
+        return os.path.dirname(os.path.abspath(__file__))
+
+# Define a global constant for the log file path
+LOG_FILE_PATH = os.path.join(get_base_path(), "log.txt")
+# --- END OF SOLUTION ---
 
 
 # Define a constant for the state after sorting is done
@@ -62,6 +77,7 @@ class SortingHatApp(QMainWindow):
         
         self.questions_to_ask_this_session = 0
         print(f"INFO: SortingHatApp initialized.")
+        print(f"INFO: Log file will be written to: {LOG_FILE_PATH}") # For debugging
 
         initial_bg_volume_slider_value = 15
         normalized_initial_slider_value = initial_bg_volume_slider_value / 100.0
@@ -346,17 +362,17 @@ class SortingHatApp(QMainWindow):
         self.stt_worker.start()
 
     def _log_transcribed_text(self, text: str):
-        """Appends a timestamped entry of the transcribed text to log.txt."""
-        log_filename = "log.txt"
+        """Appends a timestamped entry of the transcribed text to the log file."""
         try:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log_entry = f"[{timestamp}] User Input: {text}\n"
             
-            with open(log_filename, 'a', encoding='utf-8') as log_file:
+            # Use the globally defined LOG_FILE_PATH
+            with open(LOG_FILE_PATH, 'a', encoding='utf-8') as log_file:
                 log_file.write(log_entry)
-            print(f"INFO: Logged transcription to {log_filename}")
+            print(f"INFO: Logged transcription to {LOG_FILE_PATH}")
         except Exception as e:
-            print(f"ERROR: Failed to write to log file '{log_filename}': {e}")
+            print(f"ERROR: Failed to write to log file '{LOG_FILE_PATH}': {e}")
             self._update_status_bar(f"Error: Could not write to log file.")
 
     def on_stt_conversion_finished(self, transcribed_text): 
@@ -545,14 +561,10 @@ class SortingHatApp(QMainWindow):
 
 if __name__ == "__main__":
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        if os.getcwd() != script_dir:
-            os.chdir(script_dir)
-        print(f"INFO: CWD: {os.getcwd()}")
-    except Exception as e:
-        print(f"ERROR: CWD change: {e}")
-    app = QApplication(sys.argv)
-    main_window = SortingHatApp()
-    main_window.showMaximized()
-    QTimer.singleShot(250, main_window.complete_initial_setup)
-    sys.exit(app.exec())
+        # NOTE: This no longer needs to change the CWD because get_base_path() handles it.
+        # We just need to ensure our resource paths are correct.
+        app = QApplication(sys.argv)
+        main_window = SortingHatApp()
+        main_window.showMaximized()
+        QTimer.singleShot(250, main_window.complete_initial_setup)
+        sys.exit(app.exec())
