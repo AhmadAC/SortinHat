@@ -1,36 +1,38 @@
 {
+    "ui_settings": {
+        "dialogue_font_size": 28
+    },
     "hat_characteristics": {
         "emotions_to_display": [
-            "wise",
-            "mean",
-            "playful",
-            "perceptive",
-            "ancient",
-            "fair",
-            "decisive",
-            "occasionally humorous"
+            "kind",
+            "curious",
+            "a little bit funny",
+            "smart",
+            "caring",
+            "a good listener"
         ],
         "speech_style_keywords": [
-            "eloquent",
-            "slightly archaic",
-            "insightful",
-            "clear"
+            "simple words",
+            "clear sentences",
+            "friendly",
+            "for Grade 6 students",
+            "easy to understand"
         ]
     },
     "interaction_rules": {
-        "ask_leading_question": "True",
+        "ask_leading_question": true,
         "preamble_length_before_sorting": "medium",
-        "sorting_must_occur_in_this_response": "True",
+        "sorting_must_occur_in_this_response": true,
         "minimum_questions_before_sorting": 1,
         "maximum_questions_before_sorting": 1
     },
     "response_formatting": {
-        "target_word_count": 50,
+        "target_word_count": 70,
         "target_speech_duration_seconds": 0,
-        "target_word_count_question": 30
+        "target_word_count_question": 25
     },
     "api_parameters": {
-        "deepseek_temperature": 0.75,
+        "deepseek_temperature": 0.7,
         "max_tokens_override": 0
     },
     "tts_settings": {
@@ -212,9 +214,9 @@
             }
         ],
         "selected_voice_index": 6,
-        "tts_rate": 200
+        "tts_rate": 140
     },
-    "academy_name": "Magical Sorting Hat",
+    "academy_name": "BIBS Magical Sorting Hat",
     "house_system_name": "Scientist",
     "custom_houses": [
         "Tesla",
