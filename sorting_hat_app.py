@@ -3,6 +3,7 @@ import sys
 import os
 import time 
 import random
+import datetime  # Added for logging timestamp
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
@@ -344,6 +345,20 @@ class SortingHatApp(QMainWindow):
         self.stt_worker.error_signal.connect(self._on_stt_error)
         self.stt_worker.start()
 
+    def _log_transcribed_text(self, text: str):
+        """Appends a timestamped entry of the transcribed text to log.txt."""
+        log_filename = "log.txt"
+        try:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_entry = f"[{timestamp}] User Input: {text}\n"
+            
+            with open(log_filename, 'a', encoding='utf-8') as log_file:
+                log_file.write(log_entry)
+            print(f"INFO: Logged transcription to {log_filename}")
+        except Exception as e:
+            print(f"ERROR: Failed to write to log file '{log_filename}': {e}")
+            self._update_status_bar(f"Error: Could not write to log file.")
+
     def on_stt_conversion_finished(self, transcribed_text): 
         if self._is_shutting_down: return 
         print(f"DEBUG: on_stt_conversion_finished. App Interaction Step before DeepSeek: {self.interaction_step}")
@@ -354,6 +369,8 @@ class SortingHatApp(QMainWindow):
             if self.animation_handler: self.animation_handler.set_thinking_animation(loop=True)
             return 
 
+        self._log_transcribed_text(transcribed_text)
+        
         self.your_text_output.setPlainText(transcribed_text)
         self._update_status_bar("Transcription complete. Consulting the Oracle...")
         
