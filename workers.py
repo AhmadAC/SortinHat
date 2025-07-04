@@ -5,7 +5,7 @@ import time
 import wave
 import json
 import re 
-
+import speech_recognition as sr 
 from PySide6.QtCore import QThread, Signal
 
 # Audio recording dependencies
