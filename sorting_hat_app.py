@@ -20,7 +20,7 @@ from animation_handler import AnimationHandler
 from media_players import BackgroundMusicPlayer 
 
 
-# --- SOLUTION: Define the correct base path for bundled vs. script mode ---
+# --- Define the correct base path for bundled vs. script mode ---
 def get_base_path():
     """ Get the base path for the application, handling bundled executables. """
     if getattr(sys, 'frozen', False):
@@ -32,7 +32,6 @@ def get_base_path():
 
 # Define a global constant for the log file path
 LOG_FILE_PATH = os.path.join(get_base_path(), "log.txt")
-# --- END OF SOLUTION ---
 
 
 # Define a constant for the state after sorting is done
@@ -122,13 +121,11 @@ class SortingHatApp(QMainWindow):
         self.mute_button.setToolTip("Mute/Unmute Background Music")
         self.mute_button.setIconSize(QSize(24, 24)) 
         self.mute_button.clicked.connect(self._toggle_music_mute)
-
-        # --- FIX 1: Removed icon logic, forcing text-based button ---
+        
         print("INFO: Mute button is using text labels (icons removed).")
         self.mute_button.setText("Mute")
         self.mute_button.setFixedSize(60, 28)
-        # --- End of FIX 1 ---
-
+        
         self.volume_slider = QSlider(Qt.Horizontal)
         self.volume_slider.setToolTip("Adjust Background Music Volume")
         self.volume_slider.setRange(0, 100); self.volume_slider.setFixedWidth(100) 
@@ -179,28 +176,23 @@ class SortingHatApp(QMainWindow):
         
         self._stop_all_active_workers() 
 
-        # --- MODIFIED SECTION: Remove hardcoded fallbacks from these calls ---
         min_questions_setting = self.settings_manager.get_setting("interaction_rules.minimum_questions_before_sorting")
         max_questions_setting = self.settings_manager.get_setting("interaction_rules.maximum_questions_before_sorting")
         
-        # This try-except block now acts as a safety net if the settings file
-        # contains non-integer values, falling back to a hardcoded safe default.
-        # The primary source of the values is now strictly settings.json -> config.py.
         try:
             min_q = int(min_questions_setting)
             max_q = int(max_questions_setting)
-            if min_q <= 0 or max_q <= 0: # Ensure positive numbers
-                min_q, max_q = 3, 5
-                print(f"WARNING: Min/max questions must be positive. Using final fallback range 3-5.")
+            if min_q <= 0 or max_q <= 0:
+                min_q, max_q = 1, 1
+                print(f"WARNING: Min/max questions must be positive. Using fallback range 1-1.")
             if min_q > max_q:
-                max_q = min_q # Prevent random.randint error if min > max
-                print(f"WARNING: Minimum questions ({min_q}) is greater than maximum ({max_q}). Using final fallback range {min_q}-{max_q}.")
+                max_q = min_q
+                print(f"WARNING: Minimum questions ({min_q}) is greater than maximum ({max_q}). Using range {min_q}-{max_q}.")
         except (ValueError, TypeError):
-            min_q, max_q = 3, 5
-            print(f"WARNING: Could not parse min/max questions from settings. Using final fallback range {min_q}-{max_q}.")
+            min_q, max_q = 1, 1
+            print(f"WARNING: Could not parse min/max questions from settings. Using fallback range {min_q}-{max_q}.")
             
         self.questions_to_ask_this_session = random.randint(min_q, max_q)
-        # --- END OF MODIFIED SECTION ---
 
         print(f"DEBUG: New session started. The hat will ask {self.questions_to_ask_this_session} questions before sorting.")
 
@@ -491,10 +483,8 @@ class SortingHatApp(QMainWindow):
     @Slot(bool)
     def _update_mute_button_icon(self, muted: bool): 
         if self._is_shutting_down: return
-        # --- FIX 2: Removed icon logic, forcing text-based update ---
         self.mute_button.setText("Unmute" if muted else "Mute")
-        self.mute_button.setIcon(QIcon()) # Clear any potential stale icon
-        # --- End of FIX 2 ---
+        self.mute_button.setIcon(QIcon())
         
     @Slot(int)
     def _change_music_volume(self, value: int): 
@@ -560,11 +550,9 @@ class SortingHatApp(QMainWindow):
         print("INFO: All active workers processed for shutdown."); QApplication.instance().processEvents(); super().closeEvent(event)
 
 if __name__ == "__main__":
-    try:
-        # NOTE: This no longer needs to change the CWD because get_base_path() handles it.
-        # We just need to ensure our resource paths are correct.
-        app = QApplication(sys.argv)
-        main_window = SortingHatApp()
-        main_window.showMaximized()
-        QTimer.singleShot(250, main_window.complete_initial_setup)
-        sys.exit(app.exec())
+    # The erroneous 'try:' has been removed from this block.
+    app = QApplication(sys.argv)
+    main_window = SortingHatApp()
+    main_window.showMaximized()
+    QTimer.singleShot(250, main_window.complete_initial_setup)
+    sys.exit(app.exec())
