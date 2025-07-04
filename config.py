@@ -3,9 +3,11 @@ import os
 from pwdeep import * # DEEPSEEK_API_KEY is here
 
 # --- API Endpoints ---
-# NOTE: The chat endpoint is different from the audio transcription endpoint.
 DEEPSEEK_CHAT_API_URL = "https://api.deepseek.com/v1/chat/completions"
-DEEPSEEK_STT_API_URL = "https://api.deepseek.com/v1/audio/transcriptions"
+
+# --- THIS IS THE CORRECTED LINE ---
+DEEPSEEK_STT_API_URL = "https://api.deepseek.com/v1/audio/speech-to-text"
+# --- THE OLD URL was .../transcriptions ---
 
 
 # --- File Configuration ---
