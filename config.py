@@ -1,15 +1,20 @@
 # config.py
 import os
-from pwdeep import * # DEEPSEEK_API_KEY and DEEPSEEK_API_URL are here
+from pwdeep import * # DEEPSEEK_API_KEY is here
+
+# --- API Endpoints ---
+# NOTE: The chat endpoint is different from the audio transcription endpoint.
+DEEPSEEK_CHAT_API_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_STT_API_URL = "https://api.deepseek.com/v1/audio/transcriptions"
+
 
 # --- File Configuration ---
 AUDIO_FILENAME = "student_intro.wav"
 SETTINGS_FILENAME = "settings.json" 
 HAT_GIF_FILENAME = "hat.gif"  # For speaking
 HAT_THINK_GIF_FILENAME = "hat_think.gif" # For thinking/idle
-
-
 MUSIC_FILENAME = "sortinghat_music.mp3" 
+
 # --- Audio Configuration ---
 SAMPLE_RATE = 44100
 CHANNELS = 1

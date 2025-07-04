@@ -3,7 +3,6 @@ import sys
 import os
 import time 
 import random
-import datetime  # Added for logging timestamp
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
@@ -18,6 +17,20 @@ from settings_manager import SettingsManager
 from workers import AudioRecorderWorker, SpeechToTextWorker, DeepSeekWorker, TextToSpeechWorker
 from animation_handler import AnimationHandler
 from media_players import BackgroundMusicPlayer 
+
+
+# --- Define the correct base path for bundled vs. script mode ---
+def get_base_path():
+    """ Get the base path for the application, handling bundled executables. """
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, the base path is the executable's directory
+        return os.path.dirname(sys.executable)
+    else:
+        # If run as a normal .py script, the base path is the script's directory
+        return os.path.dirname(os.path.abspath(__file__))
+
+# Define a global constant for the log file path
+LOG_FILE_PATH = os.path.join(get_base_path(), "log.txt")
 
 
 # Define a constant for the state after sorting is done
@@ -62,6 +75,7 @@ class SortingHatApp(QMainWindow):
         
         self.questions_to_ask_this_session = 0
         print(f"INFO: SortingHatApp initialized.")
+        print(f"INFO: Log file will be written to: {LOG_FILE_PATH}") # For debugging
 
         initial_bg_volume_slider_value = 15
         normalized_initial_slider_value = initial_bg_volume_slider_value / 100.0
@@ -106,13 +120,11 @@ class SortingHatApp(QMainWindow):
         self.mute_button.setToolTip("Mute/Unmute Background Music")
         self.mute_button.setIconSize(QSize(24, 24)) 
         self.mute_button.clicked.connect(self._toggle_music_mute)
-
-        # --- FIX 1: Removed icon logic, forcing text-based button ---
+        
         print("INFO: Mute button is using text labels (icons removed).")
         self.mute_button.setText("Mute")
         self.mute_button.setFixedSize(60, 28)
-        # --- End of FIX 1 ---
-
+        
         self.volume_slider = QSlider(Qt.Horizontal)
         self.volume_slider.setToolTip("Adjust Background Music Volume")
         self.volume_slider.setRange(0, 100); self.volume_slider.setFixedWidth(100) 
@@ -163,28 +175,23 @@ class SortingHatApp(QMainWindow):
         
         self._stop_all_active_workers() 
 
-        # --- MODIFIED SECTION: Remove hardcoded fallbacks from these calls ---
         min_questions_setting = self.settings_manager.get_setting("interaction_rules.minimum_questions_before_sorting")
         max_questions_setting = self.settings_manager.get_setting("interaction_rules.maximum_questions_before_sorting")
         
-        # This try-except block now acts as a safety net if the settings file
-        # contains non-integer values, falling back to a hardcoded safe default.
-        # The primary source of the values is now strictly settings.json -> config.py.
         try:
             min_q = int(min_questions_setting)
             max_q = int(max_questions_setting)
-            if min_q <= 0 or max_q <= 0: # Ensure positive numbers
-                min_q, max_q = 3, 5
-                print(f"WARNING: Min/max questions must be positive. Using final fallback range 3-5.")
+            if min_q <= 0 or max_q <= 0:
+                min_q, max_q = 1, 1
+                print(f"WARNING: Min/max questions must be positive. Using fallback range 1-1.")
             if min_q > max_q:
-                max_q = min_q # Prevent random.randint error if min > max
-                print(f"WARNING: Minimum questions ({min_q}) is greater than maximum ({max_q}). Using final fallback range {min_q}-{max_q}.")
+                max_q = min_q
+                print(f"WARNING: Minimum questions ({min_q}) is greater than maximum ({max_q}). Using range {min_q}-{max_q}.")
         except (ValueError, TypeError):
-            min_q, max_q = 3, 5
-            print(f"WARNING: Could not parse min/max questions from settings. Using final fallback range {min_q}-{max_q}.")
+            min_q, max_q = 1, 1
+            print(f"WARNING: Could not parse min/max questions from settings. Using fallback range {min_q}-{max_q}.")
             
         self.questions_to_ask_this_session = random.randint(min_q, max_q)
-        # --- END OF MODIFIED SECTION ---
 
         print(f"DEBUG: New session started. The hat will ask {self.questions_to_ask_this_session} questions before sorting.")
 
@@ -345,20 +352,6 @@ class SortingHatApp(QMainWindow):
         self.stt_worker.error_signal.connect(self._on_stt_error)
         self.stt_worker.start()
 
-    def _log_transcribed_text(self, text: str):
-        """Appends a timestamped entry of the transcribed text to log.txt."""
-        log_filename = "log.txt"
-        try:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log_entry = f"[{timestamp}] User Input: {text}\n"
-            
-            with open(log_filename, 'a', encoding='utf-8') as log_file:
-                log_file.write(log_entry)
-            print(f"INFO: Logged transcription to {log_filename}")
-        except Exception as e:
-            print(f"ERROR: Failed to write to log file '{log_filename}': {e}")
-            self._update_status_bar(f"Error: Could not write to log file.")
-
     def on_stt_conversion_finished(self, transcribed_text): 
         if self._is_shutting_down: return 
         print(f"DEBUG: on_stt_conversion_finished. App Interaction Step before DeepSeek: {self.interaction_step}")
@@ -475,10 +468,8 @@ class SortingHatApp(QMainWindow):
     @Slot(bool)
     def _update_mute_button_icon(self, muted: bool): 
         if self._is_shutting_down: return
-        # --- FIX 2: Removed icon logic, forcing text-based update ---
         self.mute_button.setText("Unmute" if muted else "Mute")
-        self.mute_button.setIcon(QIcon()) # Clear any potential stale icon
-        # --- End of FIX 2 ---
+        self.mute_button.setIcon(QIcon())
         
     @Slot(int)
     def _change_music_volume(self, value: int): 
@@ -544,13 +535,7 @@ class SortingHatApp(QMainWindow):
         print("INFO: All active workers processed for shutdown."); QApplication.instance().processEvents(); super().closeEvent(event)
 
 if __name__ == "__main__":
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        if os.getcwd() != script_dir:
-            os.chdir(script_dir)
-        print(f"INFO: CWD: {os.getcwd()}")
-    except Exception as e:
-        print(f"ERROR: CWD change: {e}")
+    # The erroneous 'try:' has been removed from this block.
     app = QApplication(sys.argv)
     main_window = SortingHatApp()
     main_window.showMaximized()

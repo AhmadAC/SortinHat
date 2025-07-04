@@ -8,16 +8,18 @@ import re
 
 from PySide6.QtCore import QThread, Signal
 
+# Audio recording dependencies
 import sounddevice as sd
 from scipy.io.wavfile import write as write_wav
 import numpy as np
-import speech_recognition as sr
+
+# API and TTS dependencies
 import requests
 import pyttsx3
 
 from config import (
     AUDIO_FILENAME, SAMPLE_RATE, CHANNELS, DEFAULT_SETTINGS_TEMPLATE,
-    DEEPSEEK_API_KEY, DEEPSEEK_API_URL 
+    DEEPSEEK_API_KEY, DEEPSEEK_CHAT_API_URL, DEEPSEEK_STT_API_URL
 )
 
 class AudioRecorderWorker(QThread):
@@ -51,7 +53,7 @@ class AudioRecorderWorker(QThread):
                                  blocksize=int(SAMPLE_RATE * 0.1), dtype='float32'):
                 print("DEBUG AudioRecorderWorker: InputStream started.")
                 while self.recording:
-                    self.msleep(50) # Use QThread.msleep for better Qt integration
+                    self.msleep(50)
 
             print("DEBUG AudioRecorderWorker: self.recording is False, exited recording loop.")
 
@@ -110,22 +112,24 @@ class SpeechToTextWorker(QThread):
     error_signal = Signal(str)
     status_signal = Signal(str)
 
-    def __init__(self, audio_filepath, stt_input_language_mode=1):
+    def __init__(self, audio_filepath, stt_input_language_mode=1): # stt_input_language_mode is now for future use
         super().__init__()
         self.audio_filepath = audio_filepath
-        self.recognizer = sr.Recognizer()
-        self.stt_input_language_mode = stt_input_language_mode
-        print(f"DEBUG SpeechToTextWorker: Initialized with STT Mode: {self.stt_input_language_mode}")
+        # The speech_recognition library is no longer needed here.
+        print(f"DEBUG SpeechToTextWorker: Initialized to use DeepSeek STT.")
 
     def run(self):
-        self.status_signal.emit("Transcribing audio to text...")
-        print(f"DEBUG STT Worker: Starting run(). Processing file: '{self.audio_filepath}', STT Mode: {self.stt_input_language_mode}")
+        self.status_signal.emit("Uploading audio for transcription...")
+        print(f"DEBUG STT Worker: Starting run(). Processing file: '{self.audio_filepath}' with DeepSeek STT.")
+
+        if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_DEEPSEEK_API_KEY":
+            self.error_signal.emit("STT Error: DeepSeek API Key is not configured.")
+            return
 
         if not os.path.exists(self.audio_filepath) or os.path.getsize(self.audio_filepath) < 256: 
             err_msg = f"Audio file for STT not found or too small: {self.audio_filepath}"
             print(f"ERROR STT Worker: {err_msg}")
             self.error_signal.emit(err_msg)
-            self.status_signal.emit("STT Error: Audio file missing/empty.")
             return
 
         try:
@@ -139,102 +143,111 @@ class SpeechToTextWorker(QThread):
 
             if self.stt_input_language_mode == 1: 
                 print(f"DEBUG STT Worker (Mode 1 - English Only): Attempting recognition with language_code='{english_code}'")
-                self.status_signal.emit("Transcribing...")
+                self.status_signal.emit("Transcribing (English)...")
                 try:
                     text = self.recognizer.recognize_google(audio_data, language=english_code)
                     print(f"DEBUG STT Worker (Mode 1): English recognition successful: '{text}'")
-                    self.status_signal.emit("Transcription complete.")
+                    self.status_signal.emit("Transcription complete (English).")
                     self.finished_signal.emit(text)
                 except sr.UnknownValueError:
-                    err_msg = "STT: Could not understand audio."
+                    err_msg = "STT (English): Could not understand audio."
                     print(f"WARNING STT Worker (Mode 1): {err_msg}")
                     self.error_signal.emit(err_msg)
                     self.status_signal.emit(err_msg)
                 except sr.RequestError as e:
-                    err_msg = f"STT API Error: {e}"
+                    err_msg = f"STT API Error (English): {e}"
                     print(f"ERROR STT Worker (Mode 1): {err_msg}")
                     self.error_signal.emit(err_msg)
-                    self.status_signal.emit(f"STT Error (API): {str(e)[:50]}") 
+                    self.status_signal.emit(f"STT Error (API, EN): {str(e)[:50]}") 
                 return
 
             elif self.stt_input_language_mode == 2: 
                 print(f"DEBUG STT Worker (Mode 2 - Chinese Only): Attempting recognition with language_code='{chinese_code}'")
-                self.status_signal.emit("Transcribing...")
+                self.status_signal.emit("Transcribing (Chinese)...")
                 try:
                     text = self.recognizer.recognize_google(audio_data, language=chinese_code)
                     print(f"DEBUG STT Worker (Mode 2): Chinese recognition successful: '{text}'")
-                    self.status_signal.emit("Transcription complete.")
+                    self.status_signal.emit("Transcription complete (Chinese).")
                     self.finished_signal.emit(text)
                 except sr.UnknownValueError:
-                    err_msg = "STT: Could not understand audio."
+                    err_msg = "STT (Chinese): Could not understand audio."
                     print(f"WARNING STT Worker (Mode 2): {err_msg}")
                     self.error_signal.emit(err_msg)
                     self.status_signal.emit(err_msg)
                 except sr.RequestError as e:
-                    err_msg = f"STT API Error: {e}"
+                    err_msg = f"STT API Error (Chinese): {e}"
                     print(f"ERROR STT Worker (Mode 2): {err_msg}")
                     self.error_signal.emit(err_msg)
-                    self.status_signal.emit(f"STT Error (API): {str(e)[:50]}")
+                    self.status_signal.emit(f"STT Error (API, CN): {str(e)[:50]}")
                 return
 
             elif self.stt_input_language_mode == 3: 
-                print(f"DEBUG STT Worker (Mode 3 - Primary then Secondary): Attempting primary language recognition ('{english_code}')")
-                self.status_signal.emit("The Sorting Hat is contemplating...")
-                
-                primary_text = ""
+                print(f"DEBUG STT Worker (Mode 3 - EN then CN): Attempting English recognition first (language_code='{english_code}')")
+                self.status_signal.emit("Sorting Hat is contemplating..")
                 try:
-                    primary_text = self.recognizer.recognize_google(audio_data, language=english_code)
-                except (sr.UnknownValueError, sr.RequestError) as e_primary:
-                    print(f"DEBUG STT Worker (Mode 3): Primary language recognition failed ({type(e_primary).__name__}). Attempting secondary language ('{chinese_code}').")
-                    pass 
-                
-                if primary_text:
-                    print(f"DEBUG STT Worker (Mode 3): Primary language recognition successful: '{primary_text}'")
-                    self.finished_signal.emit(primary_text)
-                    return
-                
-                secondary_text = ""
-                try:
-                    secondary_text = self.recognizer.recognize_google(audio_data, language=chinese_code)
+                    text = self.recognizer.recognize_google(audio_data, language=english_code)
+                    print(f"DEBUG STT Worker (Mode 3): English recognition successful: '{text}'")
+                    self.finished_signal.emit(text) 
+                    return 
                 except sr.UnknownValueError:
-                    err_msg = "STT: Could not understand the audio."
-                    print(f"WARNING STT Worker (Mode 3): {err_msg}")
-                    self.error_signal.emit(err_msg)
-                    self.status_signal.emit(err_msg)
-                    return
-                except sr.RequestError as e_secondary:
-                    err_msg = f"STT API Error: {e_secondary}"
-                    print(f"ERROR STT Worker (Mode 3): {err_msg}")
-                    self.error_signal.emit(err_msg)
-                    self.status_signal.emit(f"STT Error (API): {str(e_secondary)[:50]}")
-                    return
-                
-                print(f"DEBUG STT Worker (Mode 3): Secondary language recognition successful: '{secondary_text}'")
-                self.finished_signal.emit(secondary_text)
+                    print(f"DEBUG STT Worker (Mode 3): English recognition failed (UnknownValueError). Attempting Chinese (language_code='{chinese_code}').")
+                    try:
+                        text = self.recognizer.recognize_google(audio_data, language=chinese_code)
+                        print(f"DEBUG STT Worker (Mode 3): Chinese recognition successful: '{text}'")
+                        self.finished_signal.emit(text)
+                    except sr.UnknownValueError:
+                        err_msg = "STT (EN then CN): Could not understand audio in either language."
+                        self.error_signal.emit(err_msg)
+                        self.status_signal.emit(err_msg)
+                    except sr.RequestError as e_ch:
+                        err_msg = f"STT API Error (Chinese attempt in Mode 3): {e_ch}"
+                        print(f"ERROR STT Worker (Mode 3): {err_msg}")
+                        self.error_signal.emit(err_msg)
+                        self.status_signal.emit(f"STT Error (API, CN attempt): {str(e_ch)[:50]}")
+                except sr.RequestError as e_en:
+                    try:
+                        text = self.recognizer.recognize_google(audio_data, language=chinese_code)
+                        print(f"DEBUG STT Worker (Mode 3): Chinese recognition successful after English API error: '{text}'")
+                        self.status_signal.emit("Transcription complete (Chinese).")
+                        self.finished_signal.emit(text)
+                    except sr.UnknownValueError:
+                        err_msg = "STT (EN API err, then CN fail): Could not understand audio."
+                        print(f"WARNING STT Worker (Mode 3): {err_msg}")
+                        self.error_signal.emit(err_msg)
+                        self.status_signal.emit(err_msg)
+                    except sr.RequestError as e_ch_after_en_err:
+                        err_msg = f"STT API Error (Chinese attempt after English API Error in Mode 3): {e_ch_after_en_err}"
+                        print(f"ERROR STT Worker (Mode 3): {err_msg}")
+                        self.error_signal.emit(err_msg) 
+                        self.status_signal.emit(f"STT Error (API, both attempts failed): {str(e_ch_after_en_err)[:50]}")
                 return
 
             else: 
                 err_msg = f"Internal Error: Invalid STT input language mode '{self.stt_input_language_mode}' reached worker."
                 print(f"CRITICAL ERROR STT Worker: {err_msg}")
                 self.error_signal.emit(err_msg)
-                self.status_signal.emit("STT Error: Internal config.")
-                return
 
-        except Exception as e: 
-            err_msg = f"Unexpected STT error during setup or AudioFile processing: {e}"
+        except requests.exceptions.Timeout:
+            err_msg = "Could not connect to the speech-to-text service (Timeout). Please check your internet connection and firewall."
             print(f"ERROR STT Worker: {err_msg}")
             self.error_signal.emit(err_msg)
-            self.status_signal.emit(f"STT Error: Unexpected {str(e)[:50]}")
+        except requests.exceptions.RequestException as e:
+            # This is a general catch-all for network issues, including the WinError 10060
+            err_msg = f"Could not connect to the speech-to-text service. Please check your internet and firewall. (Details: {e})"
+            print(f"ERROR STT Worker: {err_msg}")
+            self.error_signal.emit(err_msg)
+        except Exception as e: 
+            err_msg = f"An unexpected error occurred during transcription: {e}"
+            print(f"ERROR STT Worker: {err_msg}")
+            self.error_signal.emit(err_msg)
         finally:
             print("DEBUG STT Worker: run() method finished.")
 
 class DeepSeekWorker(QThread):
-    finished_signal = Signal(str) # Emits the response text from DeepSeek
-    error_signal = Signal(str)    # Emits error messages
-    status_signal = Signal(str)   # Emits status updates for the UI
+    finished_signal = Signal(str)
+    error_signal = Signal(str)
+    status_signal = Signal(str)
 
-    # conversation_step: The current step in the conversation (0 for Q1, 1 for Q2, etc.)
-    # questions_for_this_round: The total number of questions to be asked in this session (e.g., 3, 4, or 5)
     def __init__(self, user_text, conversation_step, questions_for_this_round, hat_tone="friendly", settings=None):
         super().__init__()
         self.user_text = user_text
@@ -245,16 +258,13 @@ class DeepSeekWorker(QThread):
         
         print(f"DEBUG DeepSeekWorker: Initialized. Step: {conversation_step}, Total Q's: {self.questions_for_this_round}, Tone: {hat_tone}")
 
-
     def get_setting(self, keys_str, default_val=None):
-            # Helper to safely get nested settings
             current_val = self.settings
             try:
                 for key in keys_str.split('.'):
                     current_val = current_val[key]
                 return current_val
             except (KeyError, TypeError):
-                # Fallback to default template if not in current settings
                 current_val_default_template = DEFAULT_SETTINGS_TEMPLATE
                 try:
                     for key in keys_str.split('.'):
@@ -277,7 +287,6 @@ class DeepSeekWorker(QThread):
             houses_string = "a default house (if none are configured)"
             print("WARNING: custom_houses in settings is not a valid list or is empty.")
 
-        # --- REWRITTEN PROMPT FOR GRADE 6 ELLs ---
         prompt_parts = [
             f"You are an AI Sorting Hat for the {academy_name}. You are very old and very smart.",
             "Your job is to talk to a Grade 6 student who is learning English. Use VERY simple words and short sentences. Be friendly and easy to understand.",
@@ -285,19 +294,14 @@ class DeepSeekWorker(QThread):
             f"For this talk, your main personality is: {self.hat_tone}."
         ]
         
-        # --- Interaction step specific instructions ---
-        # `self.questions_for_this_round` determines when to sort.
-        # When `conversation_step == questions_for_this_round`, it's time to sort.
-
-        if self.conversation_step < self.questions_for_this_round: # Asking questions (Q1, Q2, Q3...)
+        if self.conversation_step < self.questions_for_this_round:
             question_number = self.conversation_step + 1
-            if self.conversation_step == 0: # First question
+            if self.conversation_step == 0:
                 prompt_parts.append(f"This is your first time talking. Ask the student your Question {question_number} to learn about them. For example: 'Hello! What is your name?' or 'Tell me, what do you like to do for fun?'. Keep your question short and simple. Do NOT sort the student yet.")
-            else: # Subsequent questions
+            else:
                 prompt_parts.append(f"The student answered your last question. Now, ask your Question {question_number}. It should be a new, simple question to learn more about them. For example: 'What makes you feel brave?' or 'What is your favorite subject in school?'. Do NOT sort the student yet.")
         
-        elif self.conversation_step == self.questions_for_this_round: # Time to sort
-            # --- NEW GROUP BALANCING LOGIC START ---
+        elif self.conversation_step == self.questions_for_this_round:
             max_students = self.get_setting("max_students_in_class", 20)
             num_houses = len(custom_houses_list) if custom_houses_list and isinstance(custom_houses_list, list) and len(custom_houses_list) > 0 else 4
             group_balance_info = ""
@@ -324,10 +328,9 @@ class DeepSeekWorker(QThread):
                 except (ValueError, TypeError):
                     group_balance_info = "Your goal is to keep the houses balanced."
                     print(f"WARNING: max_students_in_class ('{max_students}') is not a valid number. Using default balance prompt.")
-            # --- NEW GROUP BALANCING LOGIC END ---
             prompt_parts.append(f"You have asked all your questions. This is your final answer. Based on what the student said, you MUST choose one of these {house_system_name} for them: {houses_string}. {group_balance_info} Tell them the house and give a short, simple reason why you chose it. You MUST sort them now.")
         
-        else: # Should not happen if app logic is correct
+        else:
              prompt_parts.append(f"Something is wrong. Just sort the student into one of the {house_system_name}: {houses_string}. Give a simple reason.")
 
         word_target_q = self.get_setting("response_formatting.target_word_count_question", 25)
@@ -336,14 +339,14 @@ class DeepSeekWorker(QThread):
         is_question_turn = (self.conversation_step < self.questions_for_this_round)
         if is_question_turn:
              prompt_parts.append(f"Your question should be about {word_target_q} words long.")
-        else: # Sorting turn
+        else:
              prompt_parts.append(f"Your full answer should be about {word_target_sort} words long.")
         
         prompt_parts.append(f"Only use the house names I gave you: {houses_string}. Do not use stars (*) or long dashes (—) in your answer.")
         return " ".join(prompt_parts)
 
     def construct_user_message(self):
-        if self.conversation_step == 0 and self.user_text is None: # Hat initiates
+        if self.conversation_step == 0 and self.user_text is None:
             return "Please give me your first question for the student."
         elif self.user_text:
             return f"The student says: \"{self.user_text}\"."
@@ -359,8 +362,8 @@ class DeepSeekWorker(QThread):
             self.error_signal.emit("DEEPSEEK_API_KEY not set or is placeholder.")
             self.status_signal.emit("API Error: Key not configured.")
             return
-        if not DEEPSEEK_API_URL: 
-            self.error_signal.emit("DEEPSEEK_API_URL not configured.")
+        if not DEEPSEEK_CHAT_API_URL: 
+            self.error_signal.emit("DEEPSEEK_CHAT_API_URL not configured.")
             self.status_signal.emit("API Error: URL not configured.")
             return
 
@@ -380,7 +383,7 @@ class DeepSeekWorker(QThread):
         is_question_turn = (self.conversation_step < self.questions_for_this_round)
         if is_question_turn:
             max_tokens = 80 
-        else: # Sorting turn
+        else:
             max_tokens = 200 
         
         if max_tokens_override > 0: max_tokens = max_tokens_override
@@ -393,7 +396,7 @@ class DeepSeekWorker(QThread):
             "temperature": api_temp,
         }
         try:
-            response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=60)
+            response = requests.post(DEEPSEEK_CHAT_API_URL, headers=headers, json=payload, timeout=60)
             response.raise_for_status() 
             response_data = response.json()
             
