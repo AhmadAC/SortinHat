@@ -20,7 +20,6 @@ from config import (
     DEEPSEEK_API_KEY, DEEPSEEK_API_URL 
 )
 
-# ... (AudioRecorderWorker and SpeechToTextWorker remain unchanged) ...
 class AudioRecorderWorker(QThread):
     finished_signal = Signal(str) 
     error_signal = Signal(str)
@@ -140,83 +139,78 @@ class SpeechToTextWorker(QThread):
 
             if self.stt_input_language_mode == 1: 
                 print(f"DEBUG STT Worker (Mode 1 - English Only): Attempting recognition with language_code='{english_code}'")
-                self.status_signal.emit("Transcribing (English)...")
+                self.status_signal.emit("Transcribing...")
                 try:
                     text = self.recognizer.recognize_google(audio_data, language=english_code)
                     print(f"DEBUG STT Worker (Mode 1): English recognition successful: '{text}'")
-                    self.status_signal.emit("Transcription complete (English).")
+                    self.status_signal.emit("Transcription complete.")
                     self.finished_signal.emit(text)
                 except sr.UnknownValueError:
-                    err_msg = "STT (English): Could not understand audio."
+                    err_msg = "STT: Could not understand audio."
                     print(f"WARNING STT Worker (Mode 1): {err_msg}")
                     self.error_signal.emit(err_msg)
                     self.status_signal.emit(err_msg)
                 except sr.RequestError as e:
-                    err_msg = f"STT API Error (English): {e}"
+                    err_msg = f"STT API Error: {e}"
                     print(f"ERROR STT Worker (Mode 1): {err_msg}")
                     self.error_signal.emit(err_msg)
-                    self.status_signal.emit(f"STT Error (API, EN): {str(e)[:50]}") 
+                    self.status_signal.emit(f"STT Error (API): {str(e)[:50]}") 
                 return
 
             elif self.stt_input_language_mode == 2: 
                 print(f"DEBUG STT Worker (Mode 2 - Chinese Only): Attempting recognition with language_code='{chinese_code}'")
-                self.status_signal.emit("Transcribing (Chinese)...")
+                self.status_signal.emit("Transcribing...")
                 try:
                     text = self.recognizer.recognize_google(audio_data, language=chinese_code)
                     print(f"DEBUG STT Worker (Mode 2): Chinese recognition successful: '{text}'")
-                    self.status_signal.emit("Transcription complete (Chinese).")
+                    self.status_signal.emit("Transcription complete.")
                     self.finished_signal.emit(text)
                 except sr.UnknownValueError:
-                    err_msg = "STT (Chinese): Could not understand audio."
+                    err_msg = "STT: Could not understand audio."
                     print(f"WARNING STT Worker (Mode 2): {err_msg}")
                     self.error_signal.emit(err_msg)
                     self.status_signal.emit(err_msg)
                 except sr.RequestError as e:
-                    err_msg = f"STT API Error (Chinese): {e}"
+                    err_msg = f"STT API Error: {e}"
                     print(f"ERROR STT Worker (Mode 2): {err_msg}")
                     self.error_signal.emit(err_msg)
-                    self.status_signal.emit(f"STT Error (API, CN): {str(e)[:50]}")
+                    self.status_signal.emit(f"STT Error (API): {str(e)[:50]}")
                 return
 
             elif self.stt_input_language_mode == 3: 
-                print(f"DEBUG STT Worker (Mode 3 - EN then CN): Attempting English recognition first (language_code='{english_code}')")
-                self.status_signal.emit("Sorting Hat is contemplating..")
+                print(f"DEBUG STT Worker (Mode 3 - Primary then Secondary): Attempting primary language recognition ('{english_code}')")
+                self.status_signal.emit("The Sorting Hat is contemplating...")
+                
+                primary_text = ""
                 try:
-                    text = self.recognizer.recognize_google(audio_data, language=english_code)
-                    print(f"DEBUG STT Worker (Mode 3): English recognition successful: '{text}'")
-                    self.finished_signal.emit(text) 
-                    return 
+                    primary_text = self.recognizer.recognize_google(audio_data, language=english_code)
+                except (sr.UnknownValueError, sr.RequestError) as e_primary:
+                    print(f"DEBUG STT Worker (Mode 3): Primary language recognition failed ({type(e_primary).__name__}). Attempting secondary language ('{chinese_code}').")
+                    pass 
+                
+                if primary_text:
+                    print(f"DEBUG STT Worker (Mode 3): Primary language recognition successful: '{primary_text}'")
+                    self.finished_signal.emit(primary_text)
+                    return
+                
+                secondary_text = ""
+                try:
+                    secondary_text = self.recognizer.recognize_google(audio_data, language=chinese_code)
                 except sr.UnknownValueError:
-                    print(f"DEBUG STT Worker (Mode 3): English recognition failed (UnknownValueError). Attempting Chinese (language_code='{chinese_code}').")
-                    try:
-                        text = self.recognizer.recognize_google(audio_data, language=chinese_code)
-                        print(f"DEBUG STT Worker (Mode 3): Chinese recognition successful: '{text}'")
-                        self.finished_signal.emit(text)
-                    except sr.UnknownValueError:
-                        err_msg = "STT (EN then CN): Could not understand audio in either language."
-                        self.error_signal.emit(err_msg)
-                        self.status_signal.emit(err_msg)
-                    except sr.RequestError as e_ch:
-                        err_msg = f"STT API Error (Chinese attempt in Mode 3): {e_ch}"
-                        print(f"ERROR STT Worker (Mode 3): {err_msg}")
-                        self.error_signal.emit(err_msg)
-                        self.status_signal.emit(f"STT Error (API, CN attempt): {str(e_ch)[:50]}")
-                except sr.RequestError as e_en:
-                    try:
-                        text = self.recognizer.recognize_google(audio_data, language=chinese_code)
-                        print(f"DEBUG STT Worker (Mode 3): Chinese recognition successful after English API error: '{text}'")
-                        self.status_signal.emit("Transcription complete (Chinese).")
-                        self.finished_signal.emit(text)
-                    except sr.UnknownValueError:
-                        err_msg = "STT (EN API err, then CN fail): Could not understand audio."
-                        print(f"WARNING STT Worker (Mode 3): {err_msg}")
-                        self.error_signal.emit(err_msg)
-                        self.status_signal.emit(err_msg)
-                    except sr.RequestError as e_ch_after_en_err:
-                        err_msg = f"STT API Error (Chinese attempt after English API Error in Mode 3): {e_ch_after_en_err}"
-                        print(f"ERROR STT Worker (Mode 3): {err_msg}")
-                        self.error_signal.emit(err_msg) 
-                        self.status_signal.emit(f"STT Error (API, both attempts failed): {str(e_ch_after_en_err)[:50]}")
+                    err_msg = "STT: Could not understand the audio."
+                    print(f"WARNING STT Worker (Mode 3): {err_msg}")
+                    self.error_signal.emit(err_msg)
+                    self.status_signal.emit(err_msg)
+                    return
+                except sr.RequestError as e_secondary:
+                    err_msg = f"STT API Error: {e_secondary}"
+                    print(f"ERROR STT Worker (Mode 3): {err_msg}")
+                    self.error_signal.emit(err_msg)
+                    self.status_signal.emit(f"STT Error (API): {str(e_secondary)[:50]}")
+                    return
+                
+                print(f"DEBUG STT Worker (Mode 3): Secondary language recognition successful: '{secondary_text}'")
+                self.finished_signal.emit(secondary_text)
                 return
 
             else: 
@@ -233,7 +227,6 @@ class SpeechToTextWorker(QThread):
             self.status_signal.emit(f"STT Error: Unexpected {str(e)[:50]}")
         finally:
             print("DEBUG STT Worker: run() method finished.")
-
 
 class DeepSeekWorker(QThread):
     finished_signal = Signal(str) # Emits the response text from DeepSeek
