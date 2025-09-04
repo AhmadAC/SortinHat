@@ -1,6 +1,9 @@
 .vscode
 __pycache__
 *.docx
+*.mp4
+*.pdf
+*.pptx
 pwdeep.py
 Lesson Plans/
 tempCodeRunnerFile.py
